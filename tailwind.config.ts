@@ -8,9 +8,14 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["system-ui", "ui-sans-serif", "sans-serif"],
+      },
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        neon: {
+          green: "#52f29c",
+          cyan: "#33e6ff",
+        },
       },
     },
   },
