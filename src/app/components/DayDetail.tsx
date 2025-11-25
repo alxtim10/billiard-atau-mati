@@ -5,6 +5,7 @@ type DayDetailProps = {
   sessions: Session[];
   deletingSessionId: string | null;
   onDeleteSession: (id: string) => void;
+  isAdmin: boolean;
 };
 
 export function DayDetail({
@@ -12,6 +13,7 @@ export function DayDetail({
   sessions,
   deletingSessionId,
   onDeleteSession,
+  isAdmin
 }: DayDetailProps) {
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-3 md:p-4 text-xs">
@@ -54,21 +56,23 @@ export function DayDetail({
                     <div className="text-[11px] text-neon-cyan font-medium">
                       {s.totalHours} jam
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => onDeleteSession(s.id)}
-                      disabled={isDeleting}
-                      className="rounded-full border border-red-500/60 bg-slate-950/80 px-2 py-0.5 text-[10px] text-red-400 hover:bg-red-500/10 transition disabled:opacity-60 disabled:hover:bg-slate-950/80"
-                    >
-                      {isDeleting ? (
-                        <span className="inline-flex items-center gap-1">
-                          <span className="inline-block h-3 w-3 animate-spin rounded-full border border-red-400 border-t-transparent" />
-                          Deleting...
-                        </span>
-                      ) : (
-                        "Delete"
-                      )}
-                    </button>
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        onClick={() => onDeleteSession(s.id)}
+                        disabled={isDeleting}
+                        className="rounded-full border border-red-500/60 bg-slate-950/80 px-2 py-0.5 text-[10px] text-red-400 hover:bg-red-500/10 transition disabled:opacity-60 disabled:hover:bg-slate-950/80"
+                      >
+                        {isDeleting ? (
+                          <span className="inline-flex items-center gap-1">
+                            <span className="inline-block h-3 w-3 animate-spin rounded-full border border-red-400 border-t-transparent" />
+                            Deleting...
+                          </span>
+                        ) : (
+                          "Delete"
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
 

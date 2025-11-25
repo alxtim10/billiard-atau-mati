@@ -8,6 +8,7 @@ import { HistorySection } from "../components/HistorySection";
 import type { PlayerInput, Session, PlayerShare } from "../types/types";
 import { parseNumber } from "../helpers/helpers";
 import { supabase } from "@/lib/supabaseClient";
+import { useSearchParams } from "next/navigation";
 
 type SessionRow = {
   id: string;
@@ -29,6 +30,8 @@ type SessionRow = {
 };
 
 export function BilliardScheduler() {
+  const searchParams = useSearchParams();
+  const isAdmin = searchParams.get("isAdmin") === "true";
   const [sessionDate, setSessionDate] = useState<string>(() =>
     new Date().toISOString().slice(0, 10)
   );
@@ -165,9 +168,9 @@ export function BilliardScheduler() {
       prev.map((p) =>
         p.id === id
           ? {
-              ...p,
-              [field]: value,
-            }
+            ...p,
+            [field]: value,
+          }
           : p
       )
     );
@@ -387,6 +390,7 @@ export function BilliardScheduler() {
             deletingSessionId={deletingSessionId}
             onDeleteSession={handleDeleteSession}
             onClearHistory={handleClearHistory}
+            isAdmin={isAdmin}
           />
         </div>
       </div>

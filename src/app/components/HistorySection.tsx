@@ -13,6 +13,7 @@ type HistorySectionProps = {
   deletingSessionId: string | null;
   onDeleteSession: (id: string) => void;
   onClearHistory: () => void;
+  isAdmin: boolean;
 };
 
 export function HistorySection({
@@ -22,6 +23,7 @@ export function HistorySection({
   deletingSessionId,
   onDeleteSession,
   onClearHistory,
+  isAdmin
 }: HistorySectionProps) {
   const [currentMonth, setCurrentMonth] = useState<Date>(() => new Date());
   const [selectedDate, setSelectedDate] = useState<string>(() =>
@@ -233,6 +235,7 @@ export function HistorySection({
           sessions={sessionsForSelectedDate}
           deletingSessionId={deletingSessionId}
           onDeleteSession={onDeleteSession}
+          isAdmin={isAdmin}
         />
       </div>
     </div>
