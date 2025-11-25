@@ -76,12 +76,12 @@ export function DayDetail({
                   <div className="flex flex-wrap gap-2 text-[11px]">
                     {s.sessionName && (
                       <span className="inline-flex items-center gap-1 rounded-full border border-slate-700 bg-slate-950/70 px-2 py-1 text-slate-200">
-                        🎱 {s.sessionName}
+                        {s.sessionName}
                       </span>
                     )}
                     {s.location && (
                       <span className="inline-flex items-center gap-1 rounded-full border border-slate-700 bg-slate-950/70 px-2 py-1 text-slate-300">
-                        📍 {s.location}
+                        {s.location}
                       </span>
                     )}
                   </div>
