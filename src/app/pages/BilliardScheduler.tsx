@@ -26,6 +26,7 @@ type SessionRow = {
     hours: number;
     portion: number;
     amount: number;
+    paid: boolean;
   }[];
 };
 
@@ -106,6 +107,7 @@ export function BilliardScheduler() {
           hours: p.hours,
           portion: p.portion,
           amount: p.amount,
+          paid: p.paid ?? false,
         })),
       }));
 
@@ -219,6 +221,7 @@ export function BilliardScheduler() {
       hours: s.hours,
       portion: s.portion,
       amount: Math.round(s.amount),
+      paid: false,
     }));
 
     const { data: insertedSession, error: sessionError } = await supabase
@@ -253,6 +256,7 @@ export function BilliardScheduler() {
           hours: p.hours,
           portion: p.portion,
           amount: p.amount,
+          paid: false,
         }))
       );
 

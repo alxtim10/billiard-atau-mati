@@ -72,12 +72,13 @@ export function HistorySection({
   const monthlySummary = useMemo(() => {
     const playersMap = new Map<
       string,
-      { totalAmount: number; totalHours: number }
+      { totalAmount: number; totalHours: number; totalPaid: number }
     >();
     const locationsSet = new Set<string>();
 
     let totalCost = 0;
     let totalHours = 0;
+    let totalPaid = 0;
 
     for (const s of monthlySessions) {
       totalCost += s.totalCost;
@@ -88,9 +89,14 @@ export function HistorySection({
         const current = playersMap.get(p.name) || {
           totalAmount: 0,
           totalHours: 0,
+          totalPaid: 0,
         };
         current.totalAmount += p.amount;
         current.totalHours += p.hours;
+        if (p.paid === true) {
+          current.totalPaid += p.amount;
+          totalPaid += p.amount;
+        }
         playersMap.set(p.name, current);
       }
     }
@@ -99,6 +105,7 @@ export function HistorySection({
       totalSessions: monthlySessions.length,
       totalCost,
       totalHours,
+      totalPaid,
       players: Array.from(playersMap.entries())
         .map(([name, v]) => ({ name, ...v }))
         .sort((a, b) => b.totalAmount - a.totalAmount),
@@ -132,6 +139,39 @@ export function HistorySection({
       ? "1 session"
       : `${monthlySummary.totalSessions} sessions`;
 
+  const handleDownloadMonthlyInvoice = (
+    player: {
+      name: string;
+      totalAmount: number;
+      totalHours: number;
+      totalPaid: number;
+    },
+    monthLabel: string
+  ) => {
+    import("../helpers/pdfGenerator").then(({ downloadInvoicePDF }) => {
+      downloadInvoicePDF({
+        invoiceNumber: `MONTHLY-${monthLabel.replace(
+          /\s/g,
+          "-"
+        )}-${player.name.slice(0, 3).toUpperCase()}`,
+        date: new Date().toISOString(), // Today's invoice date
+        customerName: player.name,
+        sessionName: `Monthly Summary - ${monthLabel}`,
+        durationHours: player.totalHours,
+        totalAmount: player.totalAmount,
+        isPaid: player.totalPaid >= player.totalAmount,
+        items: [
+          {
+            description: `Billiard Sessions - ${monthLabel}`,
+            quantity: player.totalHours,
+            price: player.totalAmount / (player.totalHours || 1),
+            total: player.totalAmount,
+          },
+        ],
+      });
+    });
+  };
+
   return (
     <div className="border-t border-slate-800 px-4 py-5 md:px-6 md:py-6">
       <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -154,13 +194,21 @@ export function HistorySection({
           </p>
         ) : (
           <>
-            <div className="grid gap-2 sm:grid-cols-3 mb-3">
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 mb-3">
               <div className="space-y-1 rounded-xl border border-slate-800 bg-slate-900/70 p-2">
                 <div className="text-slate-400 uppercase tracking-wide">
                   Total Cost
                 </div>
                 <div className="text-sm font-semibold text-neon-green">
                   Rp {monthlySummary.totalCost.toLocaleString("id-ID")}
+                </div>
+              </div>
+              <div className="space-y-1 rounded-xl border border-slate-800 bg-slate-900/70 p-2">
+                <div className="text-slate-400 uppercase tracking-wide">
+                  Total Paid
+                </div>
+                <div className="text-sm font-semibold text-neon-cyan">
+                  Rp {monthlySummary.totalPaid.toLocaleString("id-ID")}
                 </div>
               </div>
               <div className="space-y-1 rounded-xl border border-slate-800 bg-slate-900/70 p-2">
@@ -189,29 +237,63 @@ export function HistorySection({
                   Per-player recap (bulan ini):
                 </div>
                 <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1">
-                  {monthlySummary.players.map((p) => (
-                    <div
-                      key={p.name}
-                      className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900/70 px-2.5 py-1.5"
-                    >
-                      <div className="flex flex-col">
-                        <span className="font-medium text-slate-100">
-                          {p.name}
-                        </span>
-                        <span className="text-[11px] text-slate-500">
-                          {p.totalHours} jam total
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-[11px] text-slate-400">
-                          Total bayar
+                  {monthlySummary.players.map((p) => {
+                    const isPaid = p.totalPaid >= p.totalAmount;
+                    return (
+                      <div
+                        key={p.name}
+                        className="group flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900/70 px-2.5 py-1.5"
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-medium text-slate-100 flex items-center gap-1">
+                            {p.name}
+                            {isPaid === true && (
+                              <span className="text-emerald-400 text-[10px]">
+                                ✓
+                              </span>
+                            )}
+                          </span>
+                          <span className="text-[11px] text-slate-500">
+                            {p.totalHours} jam total
+                          </span>
                         </div>
-                        <div className="text-sm font-semibold text-neon-green">
-                          Rp {Math.round(p.totalAmount).toLocaleString("id-ID")}
+                        <div className="text-right flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleDownloadMonthlyInvoice(p, monthLabel)
+                            }
+                            className="hidden group-hover:block rounded border border-slate-700 bg-slate-800/50 px-1.5 py-0.5 text-[9px] text-slate-400 hover:text-slate-200 hover:border-slate-500 transition"
+                            title="Download Monthly Invoice"
+                          >
+                            PDF
+                          </button>
+                          <div>
+                            <div className="text-[11px] text-slate-400">
+                              Total bayar
+                            </div>
+                            <div
+                              className={`text-sm font-semibold ${isPaid ? "text-slate-400" : "text-neon-green"
+                                }`}
+                            >
+                              Rp{" "}
+                              {Math.round(p.totalAmount).toLocaleString(
+                                "id-ID"
+                              )}
+                            </div>
+                            {p.totalPaid > 0 && !isPaid && (
+                              <div className="text-[10px] text-slate-500">
+                                Paid: Rp{" "}
+                                {Math.round(p.totalPaid).toLocaleString(
+                                  "id-ID"
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}

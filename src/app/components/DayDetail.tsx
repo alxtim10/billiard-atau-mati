@@ -15,6 +15,42 @@ export function DayDetail({
   onDeleteSession,
   isAdmin
 }: DayDetailProps) {
+  /* ---------------- Invoice Handler ---------------- */
+  const handleDownloadInvoice = (
+    session: Session,
+    player: {
+      name: string;
+      hours: number;
+      portion: number;
+      amount: number;
+      paid?: boolean;
+    }
+  ) => {
+    import("../helpers/pdfGenerator").then(({ downloadInvoicePDF }) => {
+      downloadInvoicePDF({
+        invoiceNumber: `${session.date.replace(/-/g, "")}-${session.id.slice(
+          0,
+          4
+        )}-${player.name.slice(0, 3).toUpperCase()}`,
+        date: session.date,
+        customerName: player.name,
+        sessionName: session.sessionName,
+        location: session.location,
+        durationHours: player.hours,
+        totalAmount: player.amount,
+        isPaid: player.paid ?? false,
+        items: [
+          {
+            description: "Billiard Session Share",
+            quantity: player.hours,
+            price: player.amount / player.hours,
+            total: player.amount,
+          },
+        ],
+      });
+    });
+  };
+
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-3 md:p-4 text-xs">
       <div className="mb-2 flex items-center justify-between">
@@ -108,17 +144,40 @@ export function DayDetail({
                         className="flex items-center justify-between text-[11px]"
                       >
                         <div className="flex flex-col">
-                          <span className="font-medium text-slate-100">
+                          <span className="font-medium text-slate-100 flex items-center gap-1">
                             {p.name}
+                            {p.paid === true && (
+                              <span className="text-emerald-400 text-[10px]">✓</span>
+                            )}
                           </span>
                           <span className="text-slate-500">
                             {p.hours} jam •{" "}
                             {Math.round(p.portion * 1000) / 10}% dari total
                           </span>
                         </div>
-                        <div className="text-right">
-                          <div className="font-semibold text-neon-green">
-                            Rp {Math.round(p.amount).toLocaleString("id-ID")}
+                        <div className="text-right flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadInvoice(s, p)}
+                            className="hidden group-hover:block rounded border border-slate-700 bg-slate-800/50 px-1.5 py-0.5 text-[9px] text-slate-400 hover:text-slate-200 hover:border-slate-500 transition"
+                            title="Download Invoice"
+                          >
+                            PDF
+                          </button>
+                          <div>
+                            <div
+                              className={`font-semibold ${p.paid === true
+                                  ? "text-slate-400"
+                                  : "text-neon-green"
+                                }`}
+                            >
+                              Rp {Math.round(p.amount).toLocaleString("id-ID")}
+                            </div>
+                            {p.paid === true && (
+                              <div className="text-[10px] text-slate-500">
+                                PAID
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
