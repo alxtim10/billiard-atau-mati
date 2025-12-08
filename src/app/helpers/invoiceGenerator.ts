@@ -7,6 +7,7 @@ export type InvoiceData = {
   durationHours: number;
   ratePerHour?: number; // Calculated or estimated
   totalAmount: number;
+  totalPaid: number;
   isPaid: boolean;
   items: {
     description: string;
@@ -24,6 +25,7 @@ export const generateInvoiceHTML = (data: InvoiceData): string => {
     sessionName,
     location,
     totalAmount,
+    totalPaid,
     isPaid,
     items,
   } = data;
@@ -284,6 +286,14 @@ export const generateInvoiceHTML = (data: InvoiceData): string => {
             <td class="text-right amount">${formatRp(item.total)}</td>
           </tr>
         `).join("")}
+        <tr>
+            <td>
+              <div class="description">Total Paid</div>
+            </td>
+            <td>-</td>
+            <td class="text-right">-</td>
+            <td class="text-right amount">${formatRp(totalPaid)}</td>
+          </tr>
       </tbody>
     </table>
 
