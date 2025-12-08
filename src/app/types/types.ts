@@ -9,6 +9,7 @@ export type PlayerShare = {
   hours: number;
   portion: number;
   amount: number;
+  paid?: boolean;
 };
 
 export type Session = {
