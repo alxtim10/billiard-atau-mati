@@ -1,3 +1,4 @@
+import { formatDate } from "../helpers/formatDate";
 import type { Session } from "../types/types";
 
 type DayDetailProps = {
@@ -31,7 +32,7 @@ export function DayDetail({
             Sessions on
           </div>
           <div className="text-sm font-semibold text-slate-100">
-            {selectedDate || "-"}
+            {formatDate(new Date(selectedDate || "")) || "-"}
           </div>
         </div>
         <div className="text-[11px] text-slate-400">
