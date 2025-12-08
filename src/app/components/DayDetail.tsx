@@ -45,7 +45,7 @@ export function DayDetail({
           history.
         </p>
       ) : (
-        <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+        <div className="space-y-3 max-h-[24rem] overflow-y-auto pr-1">
           {sessions.map((s) => {
             const isDeleting = deletingSessionId === s.id;
             return (

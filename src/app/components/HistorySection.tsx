@@ -242,7 +242,7 @@ export function HistorySection({
                 <div className="mb-1 text-slate-400">
                   Per-player recap (bulan ini):
                 </div>
-                <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1">
+                <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
                   {monthlySummary.players.map((p) => {
                     const isPaid = p.totalPaid >= p.totalAmount;
                     return (
