@@ -163,7 +163,7 @@ export function HistorySection({
         customerName: player.name,
         sessionName: `Monthly Summary - ${monthLabel}`,
         durationHours: player.totalHours,
-        totalAmount: player.totalAmount,
+        totalAmount: player.totalAmount - player.totalPaid,
         isPaid: player.totalPaid >= player.totalAmount,
         items: [
           {
