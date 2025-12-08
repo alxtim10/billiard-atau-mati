@@ -5,11 +5,12 @@ export type PlayerInput = {
 };
 
 export type PlayerShare = {
+  id: string; 
   name: string;
   hours: number;
   portion: number;
   amount: number;
-  paid?: boolean;
+  paid: boolean;
 };
 
 export type Session = {

@@ -11,19 +11,24 @@ type HistorySectionProps = {
   loadingHistory: boolean;
   clearingHistory: boolean;
   deletingSessionId: string | null;
+  updatingPaidPlayerId: string | null;
   onDeleteSession: (id: string) => void;
   onClearHistory: () => void;
+  onTogglePaid: (
+    sessionId: string,
+    playerId: string,
+    currentPaid: boolean
+  ) => void;
   isAdmin: boolean;
 };
 
 export function HistorySection({
   history,
-  loadingHistory,
-  clearingHistory,
   deletingSessionId,
+  updatingPaidPlayerId,
   onDeleteSession,
-  onClearHistory,
-  isAdmin
+  onTogglePaid,
+  isAdmin,
 }: HistorySectionProps) {
   const [currentMonth, setCurrentMonth] = useState<Date>(() => new Date());
   const [selectedDate, setSelectedDate] = useState<string>(() =>
@@ -316,7 +321,9 @@ export function HistorySection({
           selectedDate={selectedDate}
           sessions={sessionsForSelectedDate}
           deletingSessionId={deletingSessionId}
+          updatingPaidPlayerId={updatingPaidPlayerId}
           onDeleteSession={onDeleteSession}
+          onTogglePaid={onTogglePaid}
           isAdmin={isAdmin}
         />
       </div>

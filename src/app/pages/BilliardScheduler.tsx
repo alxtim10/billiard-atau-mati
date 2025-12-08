@@ -33,6 +33,7 @@ type SessionRow = {
 export function BilliardScheduler() {
   const searchParams = useSearchParams();
   const isAdmin = searchParams.get("isAdmin") === "true";
+
   const [sessionDate, setSessionDate] = useState<string>(() =>
     new Date().toISOString().slice(0, 10)
   );
@@ -53,8 +54,13 @@ export function BilliardScheduler() {
   // 🔹 loading flags
   const [loadingHistory, setLoadingHistory] = useState<boolean>(false);
   const [saving, setSaving] = useState<boolean>(false);
-  const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
+  const [deletingSessionId, setDeletingSessionId] = useState<string | null>(
+    null
+  );
   const [clearingHistory, setClearingHistory] = useState<boolean>(false);
+  const [updatingPaidPlayerId, setUpdatingPaidPlayerId] = useState<string | null>(
+    null
+  );
 
   /* ---------- Load history dari Supabase ---------- */
 
@@ -79,7 +85,8 @@ export function BilliardScheduler() {
             name,
             hours,
             portion,
-            amount
+            amount,
+            paid
           )
         `
         )
@@ -103,6 +110,7 @@ export function BilliardScheduler() {
         location: row.location ?? undefined,
         createdAt: row.created_at,
         players: (row.players ?? []).map((p) => ({
+          id: p.id,
           name: p.name,
           hours: p.hours,
           portion: p.portion,
@@ -170,9 +178,9 @@ export function BilliardScheduler() {
       prev.map((p) =>
         p.id === id
           ? {
-            ...p,
-            [field]: value,
-          }
+              ...p,
+              [field]: value,
+            }
           : p
       )
     );
@@ -216,14 +224,7 @@ export function BilliardScheduler() {
 
     setSaving(true);
 
-    const playerShares: PlayerShare[] = shares.map((s) => ({
-      name: s.name,
-      hours: s.hours,
-      portion: s.portion,
-      amount: Math.round(s.amount),
-      paid: false,
-    }));
-
+    // 1) Insert session
     const { data: insertedSession, error: sessionError } = await supabase
       .from("billiard_sessions")
       .insert({
@@ -247,25 +248,36 @@ export function BilliardScheduler() {
 
     const sessionId: string = insertedSession.id;
 
-    const { error: playersError } = await supabase
+    // 2) Insert players + get back ids & paid
+    const { data: insertedPlayers, error: playersError } = await supabase
       .from("billiard_session_players")
       .insert(
-        playerShares.map((p) => ({
+        shares.map((s) => ({
           session_id: sessionId,
-          name: p.name,
-          hours: p.hours,
-          portion: p.portion,
-          amount: p.amount,
+          name: s.name,
+          hours: s.hours,
+          portion: s.portion,
+          amount: Math.round(s.amount),
           paid: false,
         }))
-      );
+      )
+      .select("id, name, hours, portion, amount, paid");
 
-    if (playersError) {
+    if (playersError || !insertedPlayers) {
       console.error("Error inserting players:", playersError);
       alert("Session tersimpan, tapi gagal menyimpan detail pemain.");
       setSaving(false);
       return;
     }
+
+    const playerShares: PlayerShare[] = insertedPlayers.map((p) => ({
+      id: p.id,
+      name: p.name,
+      hours: p.hours,
+      portion: p.portion,
+      amount: p.amount,
+      paid: p.paid ?? false,
+    }));
 
     const newSession: Session = {
       id: sessionId,
@@ -341,6 +353,43 @@ export function BilliardScheduler() {
     setClearingHistory(false);
   };
 
+  const handleTogglePaid = async (
+    sessionId: string,
+    playerId: string,
+    currentPaid: boolean
+  ) => {
+    if (updatingPaidPlayerId) return;
+    setUpdatingPaidPlayerId(playerId);
+
+    const { error } = await supabase
+      .from("billiard_session_players")
+      .update({ paid: !currentPaid })
+      .eq("id", playerId);
+
+    if (error) {
+      console.error("Error updating paid status:", error);
+      alert("Gagal update status pembayaran.");
+      setUpdatingPaidPlayerId(null);
+      return;
+    }
+
+    // update state lokal
+    setHistory((prev) =>
+      prev.map((s) =>
+        s.id !== sessionId
+          ? s
+          : {
+              ...s,
+              players: s.players.map((p) =>
+                p.id !== playerId ? p : { ...p, paid: !currentPaid }
+              ),
+            }
+      )
+    );
+
+    setUpdatingPaidPlayerId(null);
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center px-3 py-8 md:px-6 md:py-12 lg:py-16">
       <div className="relative w-full max-w-6xl">
@@ -392,8 +441,10 @@ export function BilliardScheduler() {
             loadingHistory={loadingHistory}
             clearingHistory={clearingHistory}
             deletingSessionId={deletingSessionId}
+            updatingPaidPlayerId={updatingPaidPlayerId}
             onDeleteSession={handleDeleteSession}
             onClearHistory={handleClearHistory}
+            onTogglePaid={handleTogglePaid}
             isAdmin={isAdmin}
           />
         </div>
